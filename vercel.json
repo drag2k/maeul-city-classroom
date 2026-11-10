@@ -1,0 +1,26 @@
+{
+  "framework": null,
+  "buildCommand": "node build.mjs --vercel",
+  "outputDirectory": "public-build",
+  "rewrites": [
+    {
+      "source": "/api/:action",
+      "destination": "https://maeul-city-classroom.myhome.chatgpt.site/api/:action"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    }
+  ]
+}

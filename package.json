@@ -1,0 +1,12 @@
+{
+  "name": "maeul-moa",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "node local.mjs",
+    "test": "node build.mjs && node tests/classroom.mjs",
+    "release": "node scripts/release.mjs"
+  },
+  "version": "0.9.1"
+}
