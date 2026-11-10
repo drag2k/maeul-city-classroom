@@ -40,10 +40,10 @@ function layoutNameplates(layer, editor, width, height) {
   const reserved = [];
   const fragment = document.createDocumentFragment();
   for (const n of names) {
-    const fs = Math.max(n.nested?8:10,Math.min(n.nested?13:16,width/cols*(n.nested?.77:1.1)));
+    const fs = 0.7 * Math.max(n.nested?8:10,Math.min(n.nested?13:16,width/cols*(n.nested?.77:1.1)));
     ink.font = '600 '+fs+'px "Malgun Gothic",sans-serif';
-    const w = Math.min(width,Math.ceil(ink.measureText(n.name).width)+8);
-    const h = Math.ceil(fs+4);
+    const w = Math.min(width,Math.ceil(ink.measureText(n.name).width)+6);
+    const h = Math.ceil(fs+3);
     const cx = n.x/cols*width, cy = n.y/rows*height;
     const left = Math.max(0,Math.min(width-w,cx-w/2));
     const top = Math.max(0,Math.min(height-h,cy));
@@ -88,4 +88,47 @@ function sizeMapFrame(editor, frame, stage) {
   frame.style.maxHeight = Math.min(room,Math.round(available*h/w))+'px';
   stage.style.width=width+'px'; stage.style.height=height+'px';
   return [width,height];
+}
+function installMapGestures(stage, editor, cancelEdit) {
+  const frame = stage.parentElement;
+  const touches = new Map();
+  let gesture = null;
+  function sample() {
+    const [a,b=a] = [...touches.values()];
+    return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y))};
+  }
+  function anchor() {
+    const point = sample(), rect = stage.getBoundingClientRect();
+    gesture = {point, zoom:editor.zoom, x:(point.x-rect.left)/rect.width, y:(point.y-rect.top)/rect.height};
+  }
+  function stop(event) { event.preventDefault();event.stopImmediatePropagation(); }
+  stage.addEventListener('pointerdown',event=>{
+    if(event.pointerType!=='touch')return;
+    touches.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    if(touches.size>=2 || editor.panning || (editor.zoom>1 && !editable())){
+      cancelEdit();stage.setPointerCapture(event.pointerId);anchor();stop(event);
+    }
+  },true);
+  stage.addEventListener('pointermove',event=>{
+    if(!touches.has(event.pointerId))return;
+    touches.set(event.pointerId,{x:event.clientX,y:event.clientY});
+    if(!gesture)return;
+    const point=sample();
+    if(touches.size>=2){
+      editor.zoom=Math.max(1,Math.min(5,gesture.zoom*point.d/gesture.point.d));
+      redraw();
+      if(editor.zoom===1 && editor.panning){editor.panning=false;stage.classList.remove('panning');const pan=document.getElementById('panMap');pan.textContent='화면 이동';pan.setAttribute('aria-pressed','false')}
+    }
+    const rect=stage.getBoundingClientRect();
+    frame.scrollLeft+=rect.left+gesture.x*rect.width-point.x;
+    frame.scrollTop+=rect.top+gesture.y*rect.height-point.y;
+    stop(event);
+  },true);
+  function finish(event){
+    if(!touches.delete(event.pointerId)||!gesture)return;
+    stop(event);
+    if(touches.size)anchor();else gesture=null;
+  }
+  stage.addEventListener('pointerup',finish,true);
+  stage.addEventListener('pointercancel',finish,true);
 }

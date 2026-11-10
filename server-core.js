@@ -74,9 +74,10 @@ async function api(req,env){
    }else if(action==='copy'){
     allow(role==='teacher');const g=b.group;good(Number.isInteger(g)&&r.cities[g],'도시를 먼저 저장해 주세요.');const old=r.copies[g], rev=old?.rev||0;
     if((b.rev??0)!==rev)fail(409,'발표본이 다른 화면에서 수정되었습니다. 보관함에서 최신 발표본을 다시 열어 주세요.');
-    const m=checkMap('city',b.map,r.settings.climit,old?.map||r.cities[g].map);
+    const unlocked=b.unlocked===true;const cap=unlocked?Math.max(50,r.settings.climit):r.settings.climit;
+    const m=checkMap('city',b.map,cap,old?.map||r.cities[g].map);
     good(Array.isArray(b.ink)&&b.ink.length<=500&&b.ink.every(s=>['pen','mark'].includes(s.tool)&&Array.isArray(s.pts)&&s.pts.length<=4000&&s.pts.every(p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite))),'필기 내용을 확인해 주세요.');
-    r.copies[g]={map:m,ink:b.ink,when:Date.now(),rev:rev+1};result={rev:rev+1};
+    r.copies[g]={map:m,unlocked,ink:b.ink,when:Date.now(),rev:rev+1};result={rev:rev+1};
    }else if(action==='answer'){allow(role==='student'&&r.settings.assessment);good(Array.isArray(b.answers)&&b.answers.length===4,'응답을 확인해 주세요.');r.answers[n]=b.answers.map(x=>clean(x,450));}
    else fail(404,'지원하지 않는 기능입니다.');
   }

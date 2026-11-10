@@ -20,7 +20,7 @@ function setupWizard() {
   panels.forEach(p => p.className = 'wizardPanel');
   const heading = dbody.querySelector('h2');
   const names = ['수업 기본', '모둠 편성', '확인·개설'];
-  const tips = ['기본 주택 3채는 한도에서 빠집니다. 학생이 추가할 수 있는 장소 수를 정하세요.', '모둠마다 출석번호 1~4개를 입력하고, 도시를 편집할 대표를 그중에서 고르세요.', '학급 편성을 확인한 뒤 수업을 개설하면 학생용 QR이 열립니다.'];
+  const tips = ['학생이 사용할 수 있는 아이템 한도를 설정합니다. (마을 시작 시 기본 주택 3채는 한도에 포함되지 않음)', '모둠마다 출석번호 1~4개를 입력하고, 도시를 편집할 대표를 그중에서 고르세요.', '학급 편성을 확인한 뒤 수업을 개설하면 학생용 QR이 열립니다.'];
   const caption = document.createElement('p'); caption.className = 'stepCaption'; caption.setAttribute('aria-live', 'polite');actions.before(caption);
   const back = document.createElement('button'), next = form.querySelector('button.primary');
   back.type = 'button';back.textContent = '이전';next.before(back);

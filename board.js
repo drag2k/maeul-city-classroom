@@ -24,7 +24,7 @@ function routeMap(mode,m){
  for(const o of objects){const [w,h]=box(o);if(!Number.isInteger(o.x)||!Number.isInteger(o.y)||o.x<0||o.y<0||o.x+w>W||o.y+h>H)return null;
  for(let y=o.y;y<o.y+h;y++)for(let x=o.x;x<o.x+w;x++){const i=y*W+x;if(grid[i])return null;grid[i]=2}}
  for(const o of objects){
- const [w,h]=box(o), side=o.village?[[o.x-1,o.y+Math.floor(h/2)],[o.x+w,o.y+Math.floor(h/2)]]:[[o.x+Math.floor(w/2),o.y+h],[o.x+Math.floor(w/2),o.y-1],[o.x-1,o.y+Math.floor(h/2)],[o.x+w,o.y+Math.floor(h/2)]];
+ const [w,h]=box(o), side=o.village?[[o.x+w/2<=W/2 ? o.x+w : o.x-1,o.y+Math.floor(h/2)]]:[[o.x+Math.floor(w/2),o.y+h],[o.x+Math.floor(w/2),o.y-1],[o.x-1,o.y+Math.floor(h/2)],[o.x+w,o.y+Math.floor(h/2)]];
  const seen=new Int32Array(W*H).fill(-2),q=[];
  for(const [x,y] of side){if(x<0||y<0||x>=W||y>=H)continue;let z=y*W+x;if(grid[z]!==2){q.push(z);seen[z]=-1}}
  let end=-1;

@@ -55,3 +55,24 @@ await call('answer',{answers:['a','b','c','d']},students[2],403);await call('cit
 await call('release',{num:1},teacher);await call('state',{},students[0],401);
 const newDevice=(await call('join',{num:1})).token;assert.equal((await call('state',{},newDevice)).village.map.name,vs[0].name);
 console.log('PASS | 51 artworks, limits, duplicates, 4 simultaneous students, 15 city buildings, road restrictions, server login, transfer, moved village resubmission, original and annotated copy, assessment switch, representative and device changes');
+
+const expanded=structuredClone(copy);
+for(let y=0;y<=50 && expanded.items.length<51;y+=4)for(let x=0;x<=76 && expanded.items.length<51;x+=4){
+ const o=board.item(4,x,y,'c_extra'+expanded.items.length);
+ if(board.dropValid('city',expanded,o))expanded.items.push(o);
+}
+assert.equal(expanded.items.length,51);
+await call('copy',{group:0,map:expanded,unlocked:true,ink:[],rev:1},teacher,400);
+expanded.items.pop();
+await call('copy',{group:0,map:expanded,ink:[],rev:1},teacher,400);
+await call('copy',{group:0,map:expanded,unlocked:true,ink:[],rev:1},students[2],403);
+await call('copy',{group:0,map:expanded,unlocked:true,ink:[],rev:1},teacher);
+const saved=(await call('state',{},teacher));
+assert.equal(saved.copies[0].map.items.length,50);assert.equal(saved.copies[0].unlocked,true);assert.equal(saved.cities[0].map.items.length,15);
+for(const x of [1,61]){
+ const map=board.newCity();board.addVillage(map,1,vs[0]);map.villages[0].x=x;
+ const road=board.routeMap('city',map);
+ assert.equal(road.grid[7*road.W+(x===1?19:60)],1);
+ assert.equal(road.grid[7*road.W+(x===1?0:79)],0);
+}
+console.log('PASS | inward entrances, teacher-only 50-item copy, 51 refused, original preserved');
