@@ -55,6 +55,8 @@ jobs:
           assert.equal(reviewed.answerMeta[1].reviewed,true);
           console.log('PASS production classroom creation, custom questions, student submission and teacher review');
           JS
+      - name: Verify all classroom writes on production
+        run: node scripts/check-live-storage.mjs
       - name: Create GitHub release and version tag
         env:
           GH_TOKEN: ${{ github.token }}
