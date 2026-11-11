@@ -14,7 +14,7 @@ export default async function handle(req,res) {
     const result=await api(request,{rooms:roomStore()});
     return res.status(200).json(result);
   } catch(err) {
-    if(!err.status)console.error('Classroom storage error',err.name);
+    if(!err.status)console.error('Classroom storage error',err.name, String(err.message).replace(/(?:https?:\/\/|vercel_blob_)[^\s]+/gi,'[redacted]').slice(0,240), String(err.stack).split('\n').filter(line=>line.trim().startsWith('at ')).slice(0,3).join('\n'));
     return res.status(err.status||500).json({error:err.status?err.message:'수업 저장소에 연결할 수 없습니다. 잠시 뒤 다시 시도해 주세요.'});
   }
 }
