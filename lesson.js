@@ -1,7 +1,10 @@
 'use strict';
 function readSetup() {
+  const questions = [...document.querySelectorAll('#questionEditor input')].map(input=>input.value.trim());
+  if ($('#assessment').checked && questions.some(q=>!q)) throw Error('빈 질문을 입력하거나 삭제해 주세요.');
   return {
     vlimit: Number($('#vl').value), climit: Number($('#cl').value), assessment: $('#assessment').checked,
+    questions: $('#assessment').checked ? questions : undefined,
     groups: [...$('#groups').children].map(row => ({
       nums: row.querySelector('.nums').value.trim().split(/[,，\s]+/).filter(Boolean).map(Number),
       rep: Number(row.querySelector('.rep').value)
@@ -32,7 +35,7 @@ function setupWizard() {
     next.textContent = step === 2 ? '수업 개설' : '다음';
     if (step === 2) {
       const s = readSetup();
-      review.innerHTML = '<h3>'+esc($('#title').value)+'</h3><p>마을 '+s.vlimit+'개 · 도시 '+s.climit+'개 · 개인 활동 '+(s.assessment?'사용':'끔')+'</p><ul class="rosterReview">'+s.groups.map((g,i)=>'<li><b>'+(i+1)+'모둠</b><span>'+g.nums.join(', ')+'번</span><small>대표 '+g.rep+'번</small></li>').join('')+'</ul>';
+      review.innerHTML = '<h3>'+esc($('#title').value)+'</h3><p>마을 '+s.vlimit+'개 · 도시 '+s.climit+'개 · 개인 활동 '+(s.assessment?s.questions.length+'문항':'끔')+'</p>'+(s.assessment?'<ol>'+s.questions.map(q=>'<li>'+esc(q)+'</li>').join('')+'</ol>':'')+'<ul class="rosterReview">'+s.groups.map((g,i)=>'<li><b>'+(i+1)+'모둠</b><span>'+g.nums.join(', ')+'번</span><small>대표 '+g.rep+'번</small></li>').join('')+'</ul>';
     }
     dialog.scrollTop = 0;heading.tabIndex = -1;heading.focus();
   }
@@ -46,6 +49,7 @@ function setupWizard() {
       if (!input.reportValidity()) return;
     }
     if (step === 0 && !$('#title').value.trim()) { error.textContent = '수업 이름을 입력하세요.';$('#title').focus();return; }
+    if (step === 0 && $('#assessment').checked && [...document.querySelectorAll('#questionEditor input')].some(input=>!input.value.trim())) { error.textContent='빈 질문을 입력하거나 삭제해 주세요.';return; }
     if (step === 1) {
       const seen = new Set();
       for (const [i,g] of readSetup().groups.entries()) {
