@@ -3,6 +3,7 @@ import {DatabaseSync} from 'node:sqlite';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import worker from '../dist/server/index.js';
+import {checkQuestions} from './questions.mjs';
 const root=new URL('../',import.meta.url);
 const db=new DatabaseSync(':memory:');db.exec(readFileSync(new URL('drizzle/0000_classrooms.sql',root),'utf8'));
 const env={DB:{prepare(sql){return {bind(...args){const st=db.prepare(sql);return {first:()=>st.get(...args),run:()=>({meta:st.run(...args)})}}}}}};
@@ -18,7 +19,7 @@ const teacher=(await call('login',{teacherKey:created.teacherKey,password:'class
 const students=await Promise.all([1,2,3,4].map(num=>call('join',{num}).then(b=>b.token)));
 await call('join',{num:1},'',409);await call('state',{},'',401);await call('settings',{settings},students[0],403);
 const vs=students.map((_,i)=>({...board.newVillage(),name:'마을 '+(i+1)}));
-assert.equal(board.used(vs[0]),0);assert.equal(board.labels('village').length,25);assert.equal(board.labels('city').length,26);
+assert.equal(board.used(vs[0]),0);assert.equal(board.labels('village').length,26);assert.equal(board.labels('city').length,26);
 vs[0].items.push(board.item(4,1,1,'v_one'),board.item(4,8,1,'v_two'));
 await call('village',{map:vs[0],rev:0},students[0]);
 const over=structuredClone(vs[0]);over.items.push(board.item(4,20,10,'v_three'));await call('village',{map:over,rev:1},students[0],400);
@@ -54,7 +55,7 @@ await call('settings',{settings:{...settings,assessment:false,groups:[{nums:[1,2
 await call('answer',{answers:['a','b','c','d']},students[2],403);await call('city',{map:city.map,rev:city.rev},students[0],403);
 await call('release',{num:1},teacher);await call('state',{},students[0],401);
 const newDevice=(await call('join',{num:1})).token;assert.equal((await call('state',{},newDevice)).village.map.name,vs[0].name);
-console.log('PASS | 51 artworks, limits, duplicates, 4 simultaneous students, 15 city buildings, road restrictions, server login, transfer, moved village resubmission, original and annotated copy, assessment switch, representative and device changes');
+console.log('PASS | 52 artworks, limits, duplicates, 4 simultaneous students, 15 city buildings, road restrictions, server login, transfer, moved village resubmission, original and annotated copy, assessment switch, representative and device changes');
 
 const expanded=structuredClone(copy);
 for(let y=0;y<=50 && expanded.items.length<51;y+=4)for(let x=0;x<=76 && expanded.items.length<51;x+=4){
@@ -76,3 +77,4 @@ for(const x of [1,61]){
  assert.equal(road.grid[7*road.W+(x===1?0:79)],0);
 }
 console.log('PASS | inward entrances, teacher-only 50-item copy, 51 refused, original preserved');
+await checkQuestions({api,db,settings,worker,env});

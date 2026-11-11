@@ -1,11 +1,11 @@
-/* Hand-drawn miniature buildings. Order matches the classroom inventory. */
+/* Hand-drawn miniature buildings, keyed by their saved village item IDs. */
 (function () {
   "use strict";
   const paper = "#fff4d9", blueGlass = "#a8d9d3", darkGlass = "#486d73";
   const clay = "#cd795a", sage = "#82aa89", teal = "#4d9794", rose = "#d48d92";
 
   function drawVillageArt(ctx, id) {
-    if (!Number.isInteger(id) || id < 0 || id > 24) return;
+    if (!Number.isInteger(id) || id < 0 || id > 25) return;
     ctx.save();
     ctx.lineCap = "round"; ctx.lineJoin = "round";
     function point(x, y, h = 0) { return [15 + x + y * .6, 76 + x * .17 - y * .45 - h]; }
@@ -356,6 +356,19 @@
         line([[a+7,b-4],[a+8,b-7],[a+11,b-7]],darkGlass,1);
       }
       bike(11,15,"#bd8364");bike(26,8,"#65988c");bike(35,0,"#d3a15a");
+    } else if(id===25) {
+      shadowPad();
+      box(8,8,30,23,1,35,"#f4e7d8");slopeRoof(8,8,30,23,36,6,"#748fb4");
+      window(12,7.8,20,9,9);window(25,7.8,20,9,9);
+      box(25,3,21,16,1,16,"#f7d8c6");flatRoof(25,3,21,16,17,"#c28076");
+      door(30,2.8,1,11,14);window(13,7.8,4,9,10);
+      const [u,v]=point(24,17,43);
+      oval(u+1,v+1,14.5,14.5,"#465b77");oval(u,v,14.5,14.5,"#f9f1df");
+      const tube="#425d82";
+      line([[u-8,v-6],[u-8,v-1],[u-6,v+2],[u-3,v+3],[u,v+2],[u+2,v-1],[u+2,v-6]],tube,2.4);
+      line([[u-3,v+3],[u-3,v+6],[u-1,v+8],[u+3,v+8],[u+6,v+5],[u+6,v+1]],tube,2.4);
+      for(const dx of [-8,2]) oval(u+dx,v-6,1.8,1.8,"#ba6659");
+      oval(u+6,v-1,3.3,3.3,tube);oval(u+6,v-1,1.6,1.6,"#e5bb94");
     }
     ctx.restore();
   }
