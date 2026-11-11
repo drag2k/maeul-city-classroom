@@ -1,3 +1,4 @@
+import {checkClassroom} from './classroom-scenario.mjs';
 import {api} from '../lib/classroom-api.mjs';
 import {roomStore} from '../lib/blob-rooms.mjs';
 import {del} from '@vercel/blob';
@@ -6,9 +7,18 @@ import assert from 'node:assert/strict';
 
 export async function checkHostedStorage(){
  const prefix='checks/'+randomUUID(),rooms=roomStore(prefix);
+ const fullTestRooms=[];
  let code;
  const call=(action,data,token='')=>api(new Request('https://test.local/api/'+action,{method:'POST',headers:{Authorization:'Bearer '+token},body:JSON.stringify({code,...data})}),{rooms});
  try{
+  await checkClassroom(async(action,data,token='',expected=200)=>{
+   let result,status=200;
+   try {result=await api(new Request('https://test.local/api/'+action,{method:'POST',headers:{Authorization:'Bearer '+token},body:JSON.stringify(data)}),{rooms});}
+   catch(err){if(!err.status)throw err;status=err.status;}
+   assert.equal(status,expected,action+' returned '+status);
+   if(action==='create'&&result)fullTestRooms.push(result.code);
+   return result;
+  });
   const questions=['어디에 모였나요?','어떤 공통점이 있나요?'];
   const teacher=await call('create',{title:'배포 검증',password:randomUUID(),settings:{assessment:true,vlimit:10,climit:10,questions,groups:[{nums:[1,2],rep:1}]}});
   code=teacher.code;
@@ -23,6 +33,6 @@ export async function checkHostedStorage(){
   await call('answer',{answers:['도서관','여러 동네'],questionVersion:settings.questionVersion,rev:1},a.token);
   result=await call('state',{},teacher.token);assert.equal(result.answerMeta[1].reviewed,false);
   console.log('PASS deployed storage: new classroom, simultaneous students, answers, review and resubmission');
- }finally{if(code)await del(prefix+'/'+code+'.json');}
+ }finally{for(const id of [...fullTestRooms,code].filter(Boolean))await del(prefix+'/'+id+'.json');}
 }
 
