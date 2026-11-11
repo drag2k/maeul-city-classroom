@@ -21,8 +21,6 @@ if (process.argv.includes('--vercel')) {
 }
 
 if(process.argv.includes('--vercel') && process.env.VERCEL==='1') {
-  const {checkHostedStorage}=await import('./scripts/check-hosted-storage.mjs');
-  await checkHostedStorage();
   if(process.env.VERCEL_ENV==='production'){
     const {migrateRooms}=await import('./scripts/migrate-rooms.mjs');
     await migrateRooms();
