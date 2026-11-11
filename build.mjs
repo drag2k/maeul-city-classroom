@@ -12,8 +12,19 @@ const code = [read('questions.js'),read('board.js'),read('server-core.js'),'cons
 fs.mkdirSync('dist/server',{recursive:true});
 fs.writeFileSync('dist/server/index.js',code);
 if (process.argv.includes('--vercel')) {
+  fs.mkdirSync('lib',{recursive:true});
+  fs.writeFileSync('lib/classroom-api.mjs',[read('questions.js'),read('board.js'),read('server-core.js'),'export {api};'].join('\n'));
   fs.mkdirSync('public-build',{recursive:true});
   for (const [path,body] of Object.entries(assets)) fs.writeFileSync('public-build'+path,body);
   fs.mkdirSync('public-build/icons',{recursive:true});
   for (const [path,encoded] of Object.entries(binaryAssets)) fs.writeFileSync('public-build'+path,Buffer.from(encoded,'base64'));
+}
+
+if(process.argv.includes('--vercel') && process.env.VERCEL==='1') {
+  const {checkHostedStorage}=await import('./scripts/check-hosted-storage.mjs');
+  await checkHostedStorage();
+  if(process.env.VERCEL_ENV==='production'){
+    const {migrateRooms}=await import('./scripts/migrate-rooms.mjs');
+    await migrateRooms();
+  }
 }

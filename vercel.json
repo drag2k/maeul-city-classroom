@@ -2,12 +2,6 @@
   "framework": null,
   "buildCommand": "node build.mjs --vercel",
   "outputDirectory": "public-build",
-  "rewrites": [
-    {
-      "source": "/api/:action",
-      "destination": "https://maeul-city-classroom.myhome.chatgpt.site/api/:action"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -22,5 +16,8 @@
         }
       ]
     }
+  ],
+  "regions": [
+    "icn1"
   ]
 }

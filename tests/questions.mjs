@@ -44,8 +44,8 @@ export async function checkQuestions({api, db, settings, worker, env}) {
   assert.deepEqual((await r.call('state',{},r.teacher)).answers[1],seed.answers[1]);
   await r.call('review',{num:1,rev:1},r.teacher);
   const edit=await room({...settings,questions:['이전 질문']});
-  await edit.call('settings',{settings:{...settings,questions:['바뀐 질문']},questionVersion:1},edit.teacher);
-  await edit.call('answer',{questionVersion:1,answers:['오래된 질문의 답'],rev:0},edit.student,409);
+  await edit.call('settings',{settings:{...settings,questions:['바뀐 질문']},questionVersion:1},edit.teacher,409);
+  await edit.call('answer',{questionVersion:0,answers:['오래된 질문의 답'],rev:0},edit.student,409);
   await edit.call('settings',{settings:{...settings,questions:['뒤늦은 수정']},questionVersion:1},edit.teacher,409);
   for (const questions of [[],['  ']]) await api('create',{password:'test-for-class',settings:{...settings,questions}},'',400);
   const manifest=await worker.fetch(new Request('https://class.test/manifest.webmanifest'),env);

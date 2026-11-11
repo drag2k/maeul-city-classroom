@@ -24,7 +24,7 @@ function setupQuestions(settings, locked) {
   }
   questionsFor(settings).forEach(append);
   add.hidden = locked;
-  panel.querySelector('.hint').textContent = locked ? '제출된 응답과 질문을 함께 보관하기 위해 질문이 확정되었습니다.' : '질문을 고치거나 추가·삭제하세요. 첫 응답이 제출되면 질문이 확정됩니다.';
+  panel.querySelector('.hint').textContent = locked ? '수업 개설 시 확정한 질문입니다.' : '질문을 고치거나 추가·삭제하세요. 수업을 개설하면 질문이 확정됩니다.';
   add.onclick = () => { const input = append('');update();input.focus(); };
   toggle.onchange = update;
   update();

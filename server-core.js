@@ -32,8 +32,18 @@ function visible(room,role,num){
  if(student)return {...common,village:room.villages[num]||null,city:room.cities[group]||null,sent:room.sent[num]||null,answer:room.answers[num]||null,answerMeta:room.answerMeta?.[num]||null};
  return {...common,villages:room.villages,cities:room.cities,copies:room.copies,answers:room.answers,answerMeta:room.answerMeta||{},claimed:Object.keys(room.students)};
 }
+function sqliteRooms(db) {
+ return {
+  read:code=>db.prepare('SELECT version,body FROM rooms WHERE code=?').bind(code).first(),
+  insert:(code,body)=>db.prepare('INSERT INTO rooms (code,version,body) VALUES (?,0,?)').bind(code,body).run(),
+  async update(code,old,body) {
+   const result=await db.prepare('UPDATE rooms SET version=version+1,body=? WHERE code=? AND version=?').bind(body,code,old.version).run();
+   return !!result.meta.changes;
+  }
+ };
+}
 async function api(req,env){
- const url=new URL(req.url),action=url.pathname.slice(5),db=env.DB;
+ const url=new URL(req.url),action=url.pathname.slice(5),rooms=env.rooms||sqliteRooms(env.DB);
  good(req.method==='POST','지원하지 않는 요청입니다.');const raw=await req.text();good(raw.length<700000,'요청이 너무 큽니다.');
  const b=JSON.parse(raw||'{}'),code=clean(b.code,64),token=(req.headers.get('Authorization')||'').replace(/^Bearer /,'');
  if(action==='features')return {customQuestions:true};
@@ -41,11 +51,11 @@ async function api(req,env){
   const settings=validateSettings(b.settings);good(typeof b.password==='string'&&b.password.length>=6&&b.password.length<=128,'비밀번호는 6~128자로 정해 주세요.');
   const code=random(7),teacherKey=random(18),salt=random(),t=random(24);
   const r={title:clean(b.title)||'우리 마을에서 도시로',settings,teacherKey:await digest(teacherKey),salt,pw:await passHash(b.password,salt),teacherTokens:[await digest(t)],students:{},villages:{},cities:{},copies:{},answers:{},sent:{}};
-  await db.prepare('INSERT INTO rooms (code,version,body) VALUES (?,0,?)').bind(code,JSON.stringify(r)).run();return {code,teacherKey,token:t};
+  await rooms.insert(code,JSON.stringify(r));return {code,teacherKey,token:t};
  }
  const th=token?await digest(token):'';
  for(let attempt=0;attempt<45;attempt++){
-  const row=await db.prepare('SELECT version,body FROM rooms WHERE code=?').bind(code).first();if(!row)fail(404,'수업을 찾을 수 없습니다. QR 주소를 확인해 주세요.');
+  const row=await rooms.read(code);if(!row)fail(404,'수업을 찾을 수 없습니다. QR 주소를 확인해 주세요.');
   const r=JSON.parse(row.body);let result={},role='',n=0;
   if(action==='roster')return {title:r.title,groups:r.settings.groups.map(g=>g.nums),claimed:Object.keys(r.students)};
   if(action==='login'){
@@ -65,7 +75,7 @@ async function api(req,env){
    if(action==='state')return visible(r,role,n);
    if(action==='settings'){allow(role==='teacher');const s=validateSettings(b.settings,r.settings);
     if(b.questionVersion!==undefined && b.questionVersion!==questionVersion(r.settings))fail(409,'질문이 바뀌었습니다. 환경설정을 다시 열어 주세요.');
-    if(s.questionVersion!==questionVersion(r.settings) && Object.keys(r.answers).length)fail(409,'응답이 제출된 수업의 질문은 확정되어 있습니다.');
+    if(s.questionVersion!==questionVersion(r.settings))fail(409,'수업을 개설할 때 확정한 질문을 사용합니다.');
     good(JSON.stringify(s.groups.map(g=>g.nums))===JSON.stringify(r.settings.groups.map(g=>g.nums)),'개설 후에는 대표 학생만 변경할 수 있습니다.');r.settings=s}
    else if(action==='release'){allow(role==='teacher');delete r.students[b.num]}
    else if(action==='village'||action==='send'){
@@ -104,8 +114,8 @@ async function api(req,env){
    }
    else fail(404,'지원하지 않는 기능입니다.');
   }
-  const update=await db.prepare('UPDATE rooms SET version=version+1,body=? WHERE code=? AND version=?').bind(JSON.stringify(r),code,row.version).run();
-  if(update.meta.changes){if(result.loginFailed)fail(403,'비밀번호를 확인해 주세요.');return result}
+  const saved=await rooms.update(code,row,JSON.stringify(r));
+  if(saved){if(result.loginFailed)fail(403,'비밀번호를 확인해 주세요.');return result}
   await new Promise(resolve=>setTimeout(resolve,10+Math.random()*50));
  }fail(409,'다른 기기가 저장 중입니다. 다시 눌러 주세요.');
 }
