@@ -14,7 +14,7 @@ export async function checkHostedStorage(){
   await checkClassroom(async(action,data,token='',expected=200)=>{
    let result,status=200;
    try {result=await api(new Request('https://test.local/api/'+action,{method:'POST',headers:{Authorization:'Bearer '+token},body:JSON.stringify(data)}),{rooms});}
-   catch(err){status=err.status||500;}
+   catch(err){if(!err.status)throw err;status=err.status;}
    assert.equal(status,expected,action+' returned '+status);
    if(action==='create'&&result)fullTestRooms.push(result.code);
    return result;
