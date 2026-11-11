@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-const version = JSON.parse(readFileSync('package.json')).version;
+const version = JSON.parse(readFileSync('package.json')).appVersion;
 const tag = 'v' + version;
 if (process.argv[2] !== tag) throw Error('사용자가 확인한 버전을 지정하세요. 현재 후보 '+tag);
 const git = (...args) => execFileSync('git', args, {encoding:'utf8'}).trim();

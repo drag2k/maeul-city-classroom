@@ -49,7 +49,7 @@ async function api(req,env){
  if(action==='features')return {customQuestions:true};
  if(action==='create'){
   const settings=validateSettings(b.settings);good(typeof b.password==='string'&&b.password.length>=6&&b.password.length<=128,'비밀번호는 6~128자로 정해 주세요.');
-  const code=random(7),teacherKey=random(18),salt=random(),t=random(24);
+  const code=random(rooms.codeBytes ?? 7),teacherKey=random(18),salt=random(),t=random(24);
   const r={title:clean(b.title)||'우리 마을에서 도시로',settings,teacherKey:await digest(teacherKey),salt,pw:await passHash(b.password,salt),teacherTokens:[await digest(t)],students:{},villages:{},cities:{},copies:{},answers:{},sent:{}};
   await rooms.insert(code,JSON.stringify(r));return {code,teacherKey,token:t};
  }
